@@ -1,7 +1,6 @@
 package fr.usmb.m1isc.compilation.tp;
 
-import java.io.FileReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Set;
 
 public class Main {
@@ -12,11 +11,21 @@ public class Main {
         parser p = new parser(yy);
 
         Noeud racine = (Noeud) p.parse().value;
-        printDataSegments(racine);
-        printCodeSegments(racine);
+
+        String dataWrite = dataSegments(racine);
+        String code = codeSegments(racine);
+
+        try (FileWriter fw = new FileWriter("resultat.asm", true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+            out.print(dataWrite);
+            out.print(code);
+        } catch (IOException e) {
+            System.out.println("Erreur: " + e.getMessage());
+        }
     }
 
-    private static void printDataSegments(Noeud racine){
+    private static String dataSegments(Noeud racine){
         Set<String> lets = racine.getLet();
         StringBuilder sb = new StringBuilder();
         sb.append("DATA SEGMENT\n");
@@ -24,15 +33,13 @@ public class Main {
             sb.append("\t").append(let).append(" DD\n");
         }
         sb.append("DATA ENDS\n");
-        System.out.println(sb.toString());
+        return sb.toString();
     }
 
-    private static void printCodeSegments(Noeud racine){
-        StringBuilder sb = new StringBuilder();
-        sb.append("CODE SEGMENT\n");
-        sb.append(racine.codeSegment());
-        sb.append("CODE ENDS\n");
-        System.out.println(sb.toString());
+    private static String codeSegments(Noeud racine){
+        return "CODE SEGMENT\n" +
+                racine.codeSegment() +
+                "CODE ENDS\n";
     }
 
 }
